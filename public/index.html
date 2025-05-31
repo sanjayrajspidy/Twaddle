@@ -1,49 +1,69 @@
+<!-- public/auth.html -->
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="theme-color" content="#2980b9" />
-  <!-- Favicon -->
-<link rel="icon" href="/favicon.ico" type="image/x-icon" />
-
-<!-- Web App Manifest -->
-<link rel="manifest" href="/manifest.json" />
-
-<!-- iOS support -->
-<link rel="apple-touch-icon" href="/icons/icon-192.png" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="theme-color" content="#2980b9" />
-
-  <title>Chat App</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>Join Twddle</title>
+  <link rel="stylesheet" href="auth.css" />
 </head>
-<body class="light">
-  <div class="header">
-    <h2>TWADDLE</h2>
-    <div class="header-controls">
-      <button id="theme-toggle">🌙</button>
+<body>
+<body>
+  <div class="auth-container">
+    <h2>Join Twddle</h2>
+    <input type="text" id="username" placeholder="Username">
+    <input type="tel" id="phone" placeholder="Phone Number (e.g. +91...)">
+    <button onclick="sendOTP()">Send OTP</button>
+
+    <div id="otpSection">
+      <input type="text" id="otp" placeholder="Enter OTP">
+      <button onclick="verifyOTP()">Verify OTP</button>
     </div>
-  </div>
-  <div class="chat-container">
-    <div id="messages"></div>
-    <form id="chat-form">
-      <input id="message-input" type="text" placeholder="Type or speak your message..." />
-      <button type="button" id="mic-btn">🎤</button>
-      <button type="button" id="file-btn" title="Attach File">📎</button>
 
-      <input type="file" id="file-input" accept="*/*" style="display: none;" />
-      <button type="submit">Send</button>
-    </form>
+    <p id="message"></p>
   </div>
-  
-  <!-- Copyright tag -->
-  <div class="copyright">
-    &copy; 2025 TWADDLE Chat
-  </div>
+</body>
 
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="script.js"></script>
+<script>
+  let phone = "";
+
+  function sendOTP() {
+    const username = document.getElementById("username").value;
+    phone = document.getElementById("phone").value;
+
+    fetch('/send-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, phone })
+    })
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById("message").innerText = data.message;
+      if (data.success) {
+        document.getElementById("otpSection").style.display = 'block';
+        console.log("OTP:", data.otp); // Simulate SMS
+      }
+    });
+  }
+
+  function verifyOTP() {
+    const otp = document.getElementById("otp").value;
+
+    fetch('/verify-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone, otp })
+    })
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById("message").innerText = data.message;
+      if (data.success) {
+        window.location.href = "/auth.html";
+      }
+    });
+  }
+</script>
+
 </body>
 </html>
+<!--Twilio-NL8WQAFKBPXU56TCK9C4XX7X---->
+<!--http://localhost:3000/users.html?key=Sanjayrajst@231
+-->

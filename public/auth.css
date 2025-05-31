@@ -1,0 +1,91 @@
+/* Reset & base */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  color: #2c3e50;
+}
+
+/* Auth container */
+.auth-container {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+}
+
+/* Title */
+.auth-container h2 {
+  margin-bottom: 1rem;
+  color: #34495e;
+}
+
+/* Inputs and buttons */
+.auth-container input[type="text"],
+.auth-container input[type="tel"],
+.auth-container input[type="number"],
+.auth-container button {
+  width: 95%;
+  padding: 0.75rem 1rem;
+  margin: 0.5rem 0;
+  border-radius: 10px;
+  border: 2px solid #ccc;
+  font-size: 1rem;
+  transition: 0.3s;
+}
+
+.auth-container input:focus {
+  outline: none;
+  border-color: #2980b9;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+}
+
+.auth-container button {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.auth-container button:hover {
+  background: linear-gradient(135deg, #2980b9, #21618c);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+}
+
+/* Message area */
+#message {
+  margin-top: 1rem;
+  font-size: 0.95rem;
+  color: #e74c3c;
+}
+
+/* Hide OTP section initially */
+#otpSection {
+  display: none;
+  transition: all 0.3s ease;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .auth-container {
+    margin: 1rem;
+    padding: 1.5rem;
+    border-radius: 15px;
+  }
+
+  .auth-container h2 {
+    font-size: 1.5rem;
+  }
+}

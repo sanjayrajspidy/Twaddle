@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Twddle Users</title>
+  <link rel="stylesheet" href="auth.css">
+  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 0.75rem;
+      text-align: left;
+    }
+    th {
+      background: #2980b9;
+      color: white;
+    }
+    tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+    tr:hover {
+      background: #e1f5fe;
+    }
+    .status {
+      font-weight: bold;
+      color: green;
+    }
+    .status.false {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-container">
+    <h2>Registered Twddle Users</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Username</th>
+          <th>Phone</th>
+          <th>Verified</th>
+        </tr>
+      </thead>
+      <tbody id="userTable">
+        <tr><td colspan="4">Loading...</td></tr>
+      </tbody>
+    </table>
+    <p id="error" style="color:red;"></p>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const key = params.get('key');
+
+    fetch(`/api/users?key=${key}`)
+      .then(res => {
+        if (!res.ok) throw new Error('Unauthorized');
+        return res.json();
+      })
+      .then(users => {
+        const table = document.getElementById('userTable');
+        table.innerHTML = '';
+
+        if (users.length === 0) {
+          table.innerHTML = '<tr><td colspan="4">No users found</td></tr>';
+          return;
+        }
+
+        users.forEach(user => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${user.id}</td>
+            <td>${user.username}</td>
+            <td>${user.phone}</td>
+            <td class="status ${user.is_verified ? '' : 'false'}">
+              ${user.is_verified ? '✅ Yes' : '❌ No'}
+            </td>
+          `;
+          table.appendChild(row);
+        });
+      })
+      .catch(err => {
+        console.error('Error:', err);
+        document.getElementById('error').textContent = 'Access denied. Invalid or missing admin key.';
+        document.getElementById('userTable').innerHTML = '';
+      });
+  </script>
+</body>
+</html>
