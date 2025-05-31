@@ -7,17 +7,14 @@ const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
 const fs = require('fs');
 const bodyParser = require('body-parser');
-const twilio = require('twilio');
+const sgMail = require('@sendgrid/mail');
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// Twilio config
-const twilioClient = twilio(
-  process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN
-);
+// SendGrid setup
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // Ensure uploads directory exists
 if (!fs.existsSync('uploads')) {
@@ -33,7 +30,6 @@ app.use('/uploads', express.static('uploads'));
 // SQLite DB setup
 const db = new sqlite3.Database('./chat_history.db');
 
-// Create tables
 db.serialize(() => {
   db.run(`CREATE TABLE IF NOT EXISTS messages (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -53,54 +49,71 @@ db.serialize(() => {
   )`);
 });
 
-// OTP: Send
-app.post('/send-otp', (req, res) => {
-  const { username, phone } = req.body;
+// OTP store (in memory)
+const otpStore = {};
+
+// Send OTP via email
+app.post('/send-email-otp', (req, res) => {
+  const { email, username } = req.body;
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+  otpStore[email] = { otp, expires: Date.now() + 5 * 60 * 1000 };
+
+  const msg = {
+    to: email,
+    from: process.env.EMAIL_FROM,
+    subject: 'Your Twddle OTP',
+    text: `Hi ${username},\n\nYour Twddle OTP is: ${otp}\nIt expires in 5 minutes.`,
+  };
+
+  sgMail.send(msg)
+    .then(() => {
+      console.log(`✅ OTP sent to ${email}: ${otp}`);
+      res.json({ success: true });
+    })
+    .catch(err => {
+      console.error('Email send error:', err.response?.body || err.message);
+      res.status(500).json({ success: false });
+    });
+});
+
+// Verify email OTP and save user
+app.post('/verify-email-otp', (req, res) => {
+  const { email, otp } = req.body;
+  const stored = otpStore[email];
+
+  if (!stored || stored.otp !== otp || stored.expires < Date.now()) {
+    return res.status(400).json({ success: false, message: 'Invalid or expired OTP.' });
+  }
 
   db.run(
-    `INSERT OR REPLACE INTO users (username, phone, is_verified) VALUES (?, ?, 0)`,
-    [username, phone],
-    function (err) {
+    `INSERT OR REPLACE INTO users (username, phone, is_verified) VALUES (?, ?, 1)`,
+    [email, email],
+    (err) => {
       if (err) {
         console.error('DB error:', err);
-        return res.status(500).json({ success: false, message: 'DB error' });
+        return res.status(500).json({ success: false });
       }
-
-      // Twilio Verify API
-      twilioClient.verify.v2.services(process.env.TWILIO_VERIFY_SID)
-        .verifications
-        .create({ to: phone, channel: 'sms' })
-        .then(() => {
-          res.json({ success: true, message: 'OTP sent to phone' });
-        })
-        .catch(err => {
-          console.error('Twilio error:', err);
-          res.status(500).json({ success: false, message: 'Failed to send OTP' });
-        });
+      delete otpStore[email];
+      res.json({ success: true });
     }
   );
 });
 
-// OTP: Verify
-app.post('/verify-otp', (req, res) => {
-  const { phone, otp } = req.body;
+// 🔧 Test SendGrid email delivery
+app.get('/test-email', (req, res) => {
+  const msg = {
+    to: 'sanjayindus1111@gmail.com', // change if needed
+    from: process.env.EMAIL_FROM,
+    subject: 'Twddle Test Email',
+    text: 'This is a test message to confirm SendGrid email delivery is working.',
+  };
 
-  twilioClient.verify.v2.services(process.env.TWILIO_VERIFY_SID)
-    .verificationChecks
-    .create({ to: phone, code: otp })
-    .then(verification_check => {
-      if (verification_check.status === "approved") {
-        db.run(`UPDATE users SET is_verified = 1 WHERE phone = ?`, [phone], (err) => {
-          if (err) return res.status(500).json({ success: false, message: 'DB error' });
-          res.json({ success: true, message: 'Phone number verified' });
-        });
-      } else {
-        res.status(400).json({ success: false, message: 'Invalid OTP' });
-      }
-    })
+  sgMail.send(msg)
+    .then(() => res.send('✅ Test email sent.'))
     .catch(err => {
-      console.error('Verification failed:', err);
-      res.status(500).json({ success: false, message: 'Verification failed' });
+      console.error('SendGrid error:', err.response?.body || err.message);
+      res.status(500).send('❌ Failed to send test email.');
     });
 });
 
@@ -120,7 +133,7 @@ app.post('/upload', upload.single('file'), (req, res) => {
   });
 });
 
-// Get all messages
+// Get chat messages
 app.get('/api/messages', (req, res) => {
   db.all("SELECT * FROM messages ORDER BY timestamp ASC", (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -128,7 +141,7 @@ app.get('/api/messages', (req, res) => {
   });
 });
 
-// Delete all messages
+// Delete chat messages
 app.delete('/api/messages', (req, res) => {
   db.run("DELETE FROM messages", (err) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -136,7 +149,7 @@ app.delete('/api/messages', (req, res) => {
   });
 });
 
-// Get all users (admin-only via secret key)
+// Admin: View all users
 app.get('/api/users', (req, res) => {
   const userKey = req.query.key;
   const adminKey = process.env.ADMIN_KEY;
@@ -190,12 +203,12 @@ io.on('connection', (socket) => {
   });
 });
 
-// Redirect root to /auth.html
+// Redirect to auth.html by default
 app.get('/', (req, res) => {
   res.redirect('/auth.html');
 });
 
-// Handle graceful shutdown
+// Shutdown DB on exit
 process.on('SIGINT', () => {
   console.log('Closing database...');
   db.close((err) => {
@@ -204,7 +217,7 @@ process.on('SIGINT', () => {
   });
 });
 
-// Render/production port support
+// Start server
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
