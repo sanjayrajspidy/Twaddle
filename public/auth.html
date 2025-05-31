@@ -5,17 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="theme-color" content="#2980b9" />
-  <!-- Favicon -->
-<link rel="icon" href="/favicon.ico" type="image/x-icon" />
-
-<!-- Web App Manifest -->
-<link rel="manifest" href="/manifest.json" />
-
-<!-- iOS support -->
-<link rel="apple-touch-icon" href="/icons/icon-192.png" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="theme-color" content="#2980b9" />
-
+  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
   <title>Chat App</title>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -26,19 +18,27 @@
       <button id="theme-toggle">🌙</button>
     </div>
   </div>
+
   <div class="chat-container">
+
+    <!-- 🔹 New Feature Icons Section -->
+    <div class="chat-feature-icons">
+      <div class="feature">💬 <span>Text Chat</span></div>
+      <div class="feature">🎤 <span>Voice Message</span></div>
+      <div class="feature">📎 <span>File Sharing</span></div>
+    </div>
+
     <div id="messages"></div>
+
     <form id="chat-form">
       <input id="message-input" type="text" placeholder="Type or speak your message..." />
       <button type="button" id="mic-btn">🎤</button>
       <button type="button" id="file-btn" title="Attach File">📎</button>
-
       <input type="file" id="file-input" accept="*/*" style="display: none;" />
       <button type="submit">Send</button>
     </form>
   </div>
-  
-  <!-- Copyright tag -->
+
   <div class="copyright">
     &copy; 2025 TWADDLE Chat
   </div>

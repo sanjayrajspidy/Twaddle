@@ -792,3 +792,57 @@ body {
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
   }
 }
+
+/* 🔹 Chat Feature Icons Section */
+.chat-feature-icons {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+  color: #ecf0f1;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.75rem 1rem;
+  border-radius: 15px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.chat-feature-icons .feature {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+}
+
+/* 🔹 Special message content styles */
+.message-content.file {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 500;
+  color: #f39c12;
+  animation: popIn 0.3s ease-in-out;
+}
+
+.message-content.voice {
+  background: rgba(39, 174, 96, 0.2);
+  border-radius: 10px;
+  padding: 0.5rem 1rem;
+  font-style: italic;
+  display: inline-block;
+  color: #27ae60;
+  font-weight: 600;
+  animation: popIn 0.3s ease-in-out;
+}
+
+/* 🔹 Animation */
+@keyframes popIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
